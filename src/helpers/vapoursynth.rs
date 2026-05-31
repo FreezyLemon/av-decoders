@@ -1,12 +1,7 @@
 use crate::error::DecoderError;
 use crate::{LUMA_PADDING, VideoDetails};
 use num_rational::Rational32;
-use std::{
-    collections::HashMap,
-    num::{NonZeroU8, NonZeroUsize},
-    path::Path,
-    slice,
-};
+use std::{collections::HashMap, path::Path, slice};
 use v_frame::{
     chroma::ChromaSubsampling,
     frame::{Frame, FrameBuilder},
@@ -500,22 +495,14 @@ impl VapoursynthDecoder {
             .map_err(|_| DecoderError::EndOfFile)?;
 
         let mut frame: Frame<T> = FrameBuilder::new(
-            NonZeroUsize::new(cfg.width).ok_or_else(|| DecoderError::GenericDecodeError {
-                cause: "Zero-width resolution is not supported".to_string(),
-            })?,
-            NonZeroUsize::new(cfg.height).ok_or_else(|| DecoderError::GenericDecodeError {
-                cause: "Zero-height resolution is not supported".to_string(),
-            })?,
+            cfg.width,
+            cfg.height,
             if luma_only {
                 ChromaSubsampling::Monochrome
             } else {
                 cfg.chroma_sampling
             },
-            NonZeroU8::new(cfg.bit_depth as u8).ok_or_else(|| {
-                DecoderError::GenericDecodeError {
-                    cause: "Zero-bit-depth is not supported".to_string(),
-                }
-            })?,
+            cfg.bit_depth as u8,
         )
         .luma_padding_bottom(LUMA_PADDING)
         .luma_padding_top(LUMA_PADDING)
@@ -536,7 +523,7 @@ impl VapoursynthDecoder {
                         vs_frame.stride(0) * vs_frame.height(0),
                     )
                 },
-                NonZeroUsize::new(vs_frame.stride(0)).expect("zero stride should be impossible"),
+                vs_frame.stride(0),
             )
             .map_err(|e| DecoderError::GenericDecodeError {
                 cause: e.to_string(),
@@ -551,8 +538,7 @@ impl VapoursynthDecoder {
                             vs_frame.stride(1) * vs_frame.height(1),
                         )
                     },
-                    NonZeroUsize::new(vs_frame.stride(1))
-                        .expect("zero stride should be impossible"),
+                    vs_frame.stride(1),
                 )
                 .map_err(|e| DecoderError::GenericDecodeError {
                     cause: e.to_string(),
@@ -568,8 +554,7 @@ impl VapoursynthDecoder {
                             vs_frame.stride(2) * vs_frame.height(2),
                         )
                     },
-                    NonZeroUsize::new(vs_frame.stride(2))
-                        .expect("zero stride should be impossible"),
+                    vs_frame.stride(2),
                 )
                 .map_err(|e| DecoderError::GenericDecodeError {
                     cause: e.to_string(),

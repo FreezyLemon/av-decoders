@@ -1,7 +1,4 @@
-use std::{
-    io::Read,
-    num::{NonZeroU8, NonZeroUsize},
-};
+use std::io::Read;
 
 use crate::error::DecoderError;
 use crate::{LUMA_PADDING, VideoDetails};
@@ -58,20 +55,14 @@ pub fn read_video_frame<R: Read, T: Pixel>(
     })?;
 
     let mut frame: Frame<T> = FrameBuilder::new(
-        NonZeroUsize::new(cfg.width).ok_or_else(|| DecoderError::GenericDecodeError {
-            cause: "Zero-width resolution is not supported".to_string(),
-        })?,
-        NonZeroUsize::new(cfg.height).ok_or_else(|| DecoderError::GenericDecodeError {
-            cause: "Zero-height resolution is not supported".to_string(),
-        })?,
+        cfg.width,
+        cfg.height,
         if luma_only {
             ChromaSubsampling::Monochrome
         } else {
             cfg.chroma_sampling
         },
-        NonZeroU8::new(cfg.bit_depth as u8).ok_or_else(|| DecoderError::GenericDecodeError {
-            cause: "Zero-bit-depth is not supported".to_string(),
-        })?,
+        cfg.bit_depth as u8,
     )
     .luma_padding_bottom(LUMA_PADDING)
     .luma_padding_top(LUMA_PADDING)

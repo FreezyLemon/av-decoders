@@ -1,7 +1,6 @@
 use std::{
     ffi::CString,
     ffi::c_char,
-    num::{NonZeroU8, NonZeroUsize},
     path::Path,
     slice,
     str::FromStr,
@@ -379,20 +378,14 @@ impl Ffms2Decoder {
         let bit_depth = self.video_details.bit_depth;
         let chroma_sampling = self.video_details.chroma_sampling;
         let mut frame: Frame<T> = FrameBuilder::new(
-            NonZeroUsize::new(width).ok_or_else(|| DecoderError::GenericDecodeError {
-                cause: "Zero-width resolution is not supported".to_string(),
-            })?,
-            NonZeroUsize::new(height).ok_or_else(|| DecoderError::GenericDecodeError {
-                cause: "Zero-height resolution is not supported".to_string(),
-            })?,
+            width,
+            height,
             if luma_only {
                 ChromaSubsampling::Monochrome
             } else {
                 chroma_sampling
             },
-            NonZeroU8::new(bit_depth as u8).ok_or_else(|| DecoderError::GenericDecodeError {
-                cause: "Zero-bit-depth is not supported".to_string(),
-            })?,
+            bit_depth as u8,
         )
         .luma_padding_bottom(LUMA_PADDING)
         .luma_padding_top(LUMA_PADDING)
@@ -416,8 +409,7 @@ impl Ffms2Decoder {
                     (*raw_frame).Data[0],
                     (*raw_frame).Linesize[0] as usize * self.video_details.height,
                 ),
-                NonZeroUsize::new((*raw_frame).Linesize[0] as usize)
-                    .expect("zero stride should be impossible"),
+                (*raw_frame).Linesize[0] as usize,
             )
         }
         .map_err(|e| DecoderError::GenericDecodeError {
@@ -431,8 +423,7 @@ impl Ffms2Decoder {
                         (*raw_frame).Data[1],
                         (*raw_frame).Linesize[1] as usize * chroma_height,
                     ),
-                    NonZeroUsize::new((*raw_frame).Linesize[1] as usize)
-                        .expect("zero stride should be impossible"),
+                    (*raw_frame).Linesize[1] as usize,
                 )
             }
             .map_err(|e| DecoderError::GenericDecodeError {
@@ -447,8 +438,7 @@ impl Ffms2Decoder {
                         (*raw_frame).Data[2],
                         (*raw_frame).Linesize[2] as usize * chroma_height,
                     ),
-                    NonZeroUsize::new((*raw_frame).Linesize[2] as usize)
-                        .expect("zero stride should be impossible"),
+                    (*raw_frame).Linesize[2] as usize,
                 )
             }
             .map_err(|e| DecoderError::GenericDecodeError {
